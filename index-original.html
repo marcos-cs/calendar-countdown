@@ -1,0 +1,827 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Calendar Countdown</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+    
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      min-height: 100vh;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 25%, #f093fb 50%, #4facfe 100%);
+      color: white;
+      padding: 2rem 1rem;
+      overflow-x: hidden;
+      position: relative;
+    }
+    
+    body::before {
+      content: '';
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: 
+        radial-gradient(circle at 20% 80%, rgba(120, 119, 198, 0.3) 0%, transparent 50%),
+        radial-gradient(circle at 80% 20%, rgba(252, 182, 159, 0.3) 0%, transparent 50%),
+        radial-gradient(circle at 40% 40%, rgba(147, 51, 234, 0.2) 0%, transparent 50%);
+      pointer-events: none;
+      z-index: 0;
+    }
+    
+    .container {
+      max-width: 1000px;
+      margin: 0 auto;
+      position: relative;
+      z-index: 1;
+    }
+    
+    .header {
+      position: absolute;
+      top: 2rem;
+      right: 2rem;
+      z-index: 10;
+    }
+    
+    .theme-toggle {
+      padding: 0.6rem 1rem;
+      background: rgba(255, 255, 255, 0.2);
+      backdrop-filter: blur(10px);
+      border: 1px solid rgba(255, 255, 255, 0.3);
+      border-radius: 50px;
+      font-size: 0.875rem;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      color: white;
+      transition: all 0.3s ease;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+    }
+    
+    .theme-toggle:hover {
+      background: rgba(255, 255, 255, 0.3);
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
+    }
+    
+    .theme-toggle svg {
+      width: 1.1em;
+      height: 1.1em;
+    }
+    
+    .main-title {
+      text-align: center;
+      margin: 3rem 0 1rem;
+      font-size: clamp(2rem, 5vw, 3.5rem);
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      text-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+    }
+    
+    .subtitle {
+      text-align: center;
+      font-size: clamp(0.9rem, 2vw, 1.1rem);
+      color: rgba(255, 255, 255, 0.9);
+      max-width: 700px;
+      margin: 0 auto 3rem;
+      line-height: 1.6;
+      font-weight: 300;
+    }
+    
+    .glass-card {
+      background: rgba(255, 255, 255, 0.15);
+      backdrop-filter: blur(20px);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      border-radius: 20px;
+      padding: 2.5rem;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+      margin-bottom: 2rem;
+    }
+    
+    .auth-section {
+      text-align: center;
+    }
+    
+    .auth-section p {
+      color: rgba(255, 255, 255, 0.95);
+      margin-bottom: 2rem;
+      font-size: 1.1rem;
+    }
+    
+    button {
+      padding: 1rem 2.5rem;
+      background: rgba(255, 255, 255, 0.95);
+      color: #667eea;
+      border: none;
+      border-radius: 50px;
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+    }
+    
+    button:hover:not(:disabled) {
+      background: white;
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(0, 0, 0, 0.25);
+    }
+    
+    button:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+    
+    button.secondary {
+      background: rgba(255, 255, 255, 0.2);
+      color: white;
+      border: 1px solid rgba(255, 255, 255, 0.3);
+      padding: 0.75rem 1.5rem;
+      font-size: 0.95rem;
+    }
+    
+    button.secondary:hover:not(:disabled) {
+      background: rgba(255, 255, 255, 0.3);
+    }
+    
+    .countdown-section {
+      text-align: center;
+    }
+    
+    .countdown-header {
+      font-size: clamp(1.5rem, 3vw, 2rem);
+      margin-bottom: 0.5rem;
+      font-weight: 400;
+      letter-spacing: 0.05em;
+    }
+    
+    .countdown-display {
+      display: flex;
+      justify-content: center;
+      gap: 1.5rem;
+      margin: 3rem 0;
+      flex-wrap: wrap;
+    }
+    
+    .countdown-unit {
+      background: rgba(255, 255, 255, 0.25);
+      backdrop-filter: blur(15px);
+      border: 1px solid rgba(255, 255, 255, 0.3);
+      border-radius: 20px;
+      padding: 2rem 1.5rem;
+      min-width: 140px;
+      transition: all 0.3s ease;
+      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+    }
+    
+    .countdown-unit:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 12px 30px rgba(0, 0, 0, 0.15);
+      background: rgba(255, 255, 255, 0.3);
+    }
+    
+    .countdown-value {
+      font-size: clamp(3rem, 6vw, 4.5rem);
+      font-weight: 700;
+      display: block;
+      line-height: 1;
+      text-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    }
+    
+    .countdown-label {
+      font-size: 0.9rem;
+      text-transform: uppercase;
+      letter-spacing: 0.15em;
+      margin-top: 1rem;
+      display: block;
+      opacity: 0.9;
+      font-weight: 500;
+    }
+    
+    .meeting-info {
+      margin-top: 3rem;
+      padding: 2rem;
+      background: rgba(255, 255, 255, 0.1);
+      backdrop-filter: blur(10px);
+      border-radius: 15px;
+      border: 1px solid rgba(255, 255, 255, 0.2);
+    }
+    
+    .meeting-title {
+      font-size: clamp(1.25rem, 3vw, 1.75rem);
+      font-weight: 600;
+      margin-bottom: 0.75rem;
+      color: white;
+    }
+    
+    .meeting-time {
+      color: rgba(255, 255, 255, 0.85);
+      font-size: 1rem;
+    }
+    
+    .status-message {
+      padding: 1rem 1.5rem;
+      border-radius: 15px;
+      margin-bottom: 1.5rem;
+      display: none;
+      backdrop-filter: blur(10px);
+      border: 1px solid rgba(255, 255, 255, 0.3);
+    }
+    
+    .status-message.error {
+      background: rgba(239, 68, 68, 0.3);
+      color: white;
+      display: block;
+    }
+    
+    .status-message.warning {
+      background: rgba(251, 146, 60, 0.3);
+      color: white;
+      display: block;
+    }
+    
+    .status-message.info {
+      background: rgba(59, 130, 246, 0.3);
+      color: white;
+      display: block;
+    }
+    
+    .loading {
+      text-align: center;
+      color: white;
+      padding: 3rem;
+      font-size: 1.2rem;
+    }
+    
+    .loading::after {
+      content: '...';
+      animation: dots 1.5s steps(4, end) infinite;
+    }
+    
+    @keyframes dots {
+      0%, 20% { content: '.'; }
+      40% { content: '..'; }
+      60%, 100% { content: '...'; }
+    }
+    
+    .button-group {
+      display: flex;
+      gap: 1rem;
+      justify-content: center;
+      flex-wrap: wrap;
+      margin-top: 2rem;
+    }
+    
+    .refresh-indicator {
+      font-size: 0.85rem;
+      color: rgba(255, 255, 255, 0.7);
+      margin-top: 1.5rem;
+      text-align: center;
+    }
+    
+    .hidden {
+      display: none !important;
+    }
+    
+    .setup-instructions {
+      background: rgba(251, 146, 60, 0.2);
+      backdrop-filter: blur(10px);
+      border: 1px solid rgba(251, 146, 60, 0.3);
+      color: white;
+      padding: 1.5rem;
+      border-radius: 15px;
+      margin-bottom: 1.5rem;
+      font-size: 0.95rem;
+    }
+    
+    .setup-instructions h3 {
+      margin-bottom: 1rem;
+      font-size: 1.25rem;
+    }
+    
+    .setup-instructions ol {
+      margin: 1rem 0;
+      padding-left: 1.5rem;
+      line-height: 1.8;
+    }
+    
+    .setup-instructions a {
+      color: white;
+      text-decoration: underline;
+    }
+    
+    .setup-instructions code {
+      background: rgba(255, 255, 255, 0.2);
+      padding: 0.3rem 0.5rem;
+      border-radius: 6px;
+      font-size: 0.9em;
+      font-family: 'Courier New', monospace;
+    }
+    
+    @media (max-width: 768px) {
+      .countdown-unit {
+        min-width: 110px;
+        padding: 1.5rem 1rem;
+      }
+      
+      .countdown-display {
+        gap: 1rem;
+      }
+      
+      .glass-card {
+        padding: 1.5rem;
+      }
+      
+      .header {
+        position: relative;
+        top: auto;
+        right: auto;
+        display: flex;
+        justify-content: flex-end;
+        margin-bottom: 2rem;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <button type="button" class="theme-toggle" id="themeToggle" aria-label="Toggle theme" title="Toggle theme">
+        <svg class="icon-sun" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/></svg>
+        <svg class="icon-moon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true" style="display:none"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+        <span class="theme-label">Theme</span>
+      </button>
+    </div>
+
+    <h1 class="main-title">Next Meeting Countdown</h1>
+    <p class="subtitle">Stay on top of your schedule with real-time countdown to your next Google Calendar event. Connect your calendar and never miss a meeting again.</p>
+
+    <div id="statusMessage" class="status-message"></div>
+
+    <div id="setupInstructions" class="setup-instructions hidden">
+      <h3>⚙️ Setup Required</h3>
+      <p>To use this app, you need to configure Google Calendar API:</p>
+      <ol>
+        <li>Go to <a href="https://console.cloud.google.com" target="_blank">Google Cloud Console</a></li>
+        <li>Create a new project or select existing one</li>
+        <li>Enable the Google Calendar API</li>
+        <li>Create OAuth 2.0 credentials (Web application)</li>
+        <li>Add your email as a test user in OAuth consent screen</li>
+        <li>Add authorized JavaScript origins (e.g., <code>http://localhost:8000</code>)</li>
+        <li>Copy the Client ID and replace <code>YOUR_GOOGLE_CLIENT_ID_HERE</code> in this HTML file</li>
+      </ol>
+    </div>
+
+    <div id="authSection" class="glass-card auth-section">
+      <p>Connect your Google Calendar to see your next meeting countdown</p>
+      <button type="button" id="connectBtn">
+        <span>🔗 Connect to Google Calendar</span>
+      </button>
+    </div>
+
+    <div id="countdownSection" class="glass-card countdown-section hidden">
+      <h2 class="countdown-header">Your Next Meeting In</h2>
+      <div class="countdown-display">
+        <div class="countdown-unit">
+          <span class="countdown-value" id="days">0</span>
+          <span class="countdown-label">Days</span>
+        </div>
+        <div class="countdown-unit">
+          <span class="countdown-value" id="hours">0</span>
+          <span class="countdown-label">Hours</span>
+        </div>
+        <div class="countdown-unit">
+          <span class="countdown-value" id="minutes">0</span>
+          <span class="countdown-label">Minutes</span>
+        </div>
+        <div class="countdown-unit">
+          <span class="countdown-value" id="seconds">0</span>
+          <span class="countdown-label">Seconds</span>
+        </div>
+      </div>
+      <div class="meeting-info">
+        <div class="meeting-title" id="meetingTitle">Loading...</div>
+        <div class="meeting-time" id="meetingTime"></div>
+      </div>
+      <div class="button-group">
+        <button type="button" id="refreshBtn" class="secondary">🔄 Refresh Now</button>
+        <button type="button" id="signOutBtn" class="secondary">Sign Out</button>
+      </div>
+      <div class="refresh-indicator" id="refreshIndicator">
+        Auto-refresh: checking for updates every 5 minutes
+      </div>
+    </div>
+
+    <div id="loadingSection" class="glass-card loading hidden">
+      Loading calendar events
+    </div>
+  </div>
+
+  <script src="https://accounts.google.com/gsi/client" async defer></script>
+  <script src="https://apis.google.com/js/api.js" async defer></script>
+  
+  <script>
+    // CONFIGURATION - Replace with your Google Client ID
+    const CLIENT_ID = '384527602669-ogjhra4agiu3jomrvaph9oip854hloeq.apps.googleusercontent.com';
+    const API_KEY = ''; // Optional: Add API key if needed
+    const SCOPES = 'https://www.googleapis.com/auth/calendar.readonly';
+    const DISCOVERY_DOC = 'https://www.googleapis.com/discovery/v1/apis/calendar/v3/rest';
+    
+    // Storage keys
+    const TOKEN_KEY = 'gcal_access_token';
+    const THEME_KEY = 'calendar-theme';
+    
+    // Auto-refresh interval (5 minutes)
+    const AUTO_REFRESH_INTERVAL = 5 * 60 * 1000;
+    
+    // DOM Elements
+    const authSection = document.getElementById('authSection');
+    const countdownSection = document.getElementById('countdownSection');
+    const loadingSection = document.getElementById('loadingSection');
+    const connectBtn = document.getElementById('connectBtn');
+    const signOutBtn = document.getElementById('signOutBtn');
+    const refreshBtn = document.getElementById('refreshBtn');
+    const statusMessage = document.getElementById('statusMessage');
+    const setupInstructions = document.getElementById('setupInstructions');
+    const themeToggle = document.getElementById('themeToggle');
+    const themeLabel = themeToggle.querySelector('.theme-label');
+    const iconSun = themeToggle.querySelector('.icon-sun');
+    const iconMoon = themeToggle.querySelector('.icon-moon');
+    
+    // State
+    let tokenClient;
+    let accessToken = null;
+    let gapiInited = false;
+    let gisInited = false;
+    let nextMeeting = null;
+    let countdownInterval = null;
+    let autoRefreshInterval = null;
+    
+    // Theme Management
+    function isDark() {
+      return document.body.classList.contains('dark-theme');
+    }
+    
+    function applyTheme(dark) {
+      document.body.classList.toggle('dark-theme', dark);
+      themeLabel.textContent = dark ? 'Light' : 'Dark';
+      iconSun.style.display = dark ? 'none' : 'block';
+      iconMoon.style.display = dark ? 'block' : 'none';
+      themeToggle.setAttribute('aria-label', dark ? 'Switch to light mode' : 'Switch to dark mode');
+      
+      // Update gradient for dark theme
+      if (dark) {
+        document.body.style.background = 'linear-gradient(135deg, #1e3a8a 0%, #581c87 25%, #7c2d12 50%, #0c4a6e 100%)';
+      } else {
+        document.body.style.background = 'linear-gradient(135deg, #667eea 0%, #764ba2 25%, #f093fb 50%, #4facfe 100%)';
+      }
+      
+      try { localStorage.setItem(THEME_KEY, dark ? 'dark' : 'light'); } catch (_) {}
+    }
+    
+    function toggleTheme() {
+      applyTheme(!isDark());
+    }
+    
+    (function initTheme() {
+      try {
+        const saved = localStorage.getItem(THEME_KEY);
+        if (saved === 'dark') applyTheme(true);
+        else if (saved === 'light') applyTheme(false);
+        else if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) applyTheme(true);
+      } catch (_) {}
+    })();
+    
+    themeToggle.addEventListener('click', toggleTheme);
+    
+    // Status Messages
+    function showStatus(message, type = 'info') {
+      statusMessage.textContent = message;
+      statusMessage.className = `status-message ${type}`;
+      setTimeout(() => {
+        statusMessage.className = 'status-message';
+      }, 5000);
+    }
+    
+    function showError(message) {
+      showStatus(message, 'error');
+    }
+    
+    function showWarning(message) {
+      showStatus(message, 'warning');
+    }
+    
+    function showInfo(message) {
+      showStatus(message, 'info');
+    }
+    
+    // Initialize Google API
+    function gapiLoaded() {
+      gapi.load('client', initializeGapiClient);
+    }
+    
+    async function initializeGapiClient() {
+      try {
+        await gapi.client.init({
+          apiKey: API_KEY,
+          discoveryDocs: [DISCOVERY_DOC],
+        });
+        gapiInited = true;
+        maybeEnableButtons();
+      } catch (error) {
+        console.error('Error initializing GAPI client:', error);
+        showError('Failed to initialize Google API client');
+      }
+    }
+    
+    // Initialize Google Identity Services
+    function gisLoaded() {
+      tokenClient = google.accounts.oauth2.initTokenClient({
+        client_id: CLIENT_ID,
+        scope: SCOPES,
+        callback: '', // defined later
+      });
+      gisInited = true;
+      maybeEnableButtons();
+    }
+    
+    function maybeEnableButtons() {
+      if (gapiInited && gisInited) {
+        connectBtn.disabled = false;
+        
+        // Check if CLIENT_ID is configured
+        if (CLIENT_ID === 'YOUR_GOOGLE_CLIENT_ID_HERE') {
+          setupInstructions.classList.remove('hidden');
+          connectBtn.disabled = true;
+          return;
+        }
+        
+        // Check for existing token
+        checkExistingToken();
+      }
+    }
+    
+    // Check for existing token in localStorage
+    function checkExistingToken() {
+      try {
+        const savedToken = localStorage.getItem(TOKEN_KEY);
+        if (savedToken) {
+          accessToken = savedToken;
+          gapi.client.setToken({ access_token: accessToken });
+          handleAuthSuccess();
+        }
+      } catch (error) {
+        console.error('Error checking saved token:', error);
+      }
+    }
+    
+    // Handle Authorization
+    function handleAuthClick() {
+      tokenClient.callback = async (resp) => {
+        if (resp.error !== undefined) {
+          showError('Authorization failed: ' + resp.error);
+          throw (resp);
+        }
+        accessToken = resp.access_token;
+        
+        // Save token to localStorage
+        try {
+          localStorage.setItem(TOKEN_KEY, accessToken);
+        } catch (error) {
+          console.error('Error saving token:', error);
+        }
+        
+        handleAuthSuccess();
+      };
+      
+      if (accessToken === null) {
+        // Prompt the user to select a Google Account and ask for consent to share their data
+        tokenClient.requestAccessToken({ prompt: 'consent' });
+      } else {
+        // Skip display of account chooser and consent dialog for an existing session.
+        tokenClient.requestAccessToken({ prompt: '' });
+      }
+    }
+    
+    function handleAuthSuccess() {
+      authSection.classList.add('hidden');
+      loadingSection.classList.remove('hidden');
+      fetchNextMeeting();
+    }
+    
+    // Sign Out
+    function handleSignOut() {
+      accessToken = null;
+      try {
+        localStorage.removeItem(TOKEN_KEY);
+      } catch (error) {
+        console.error('Error removing token:', error);
+      }
+      
+      gapi.client.setToken(null);
+      
+      // Stop intervals
+      if (countdownInterval) {
+        clearInterval(countdownInterval);
+        countdownInterval = null;
+      }
+      if (autoRefreshInterval) {
+        clearInterval(autoRefreshInterval);
+        autoRefreshInterval = null;
+      }
+      
+      // Reset UI
+      countdownSection.classList.add('hidden');
+      authSection.classList.remove('hidden');
+      nextMeeting = null;
+      
+      showInfo('Signed out successfully');
+    }
+    
+    // Fetch Next Meeting
+    async function fetchNextMeeting() {
+      try {
+        const now = new Date().toISOString();
+        const response = await gapi.client.calendar.events.list({
+          'calendarId': 'primary',
+          'timeMin': now,
+          'showDeleted': false,
+          'singleEvents': true,
+          'maxResults': 10,
+          'orderBy': 'startTime'
+        });
+        
+        const events = response.result.items;
+        
+        if (!events || events.length === 0) {
+          showWarning('No upcoming meetings found');
+          loadingSection.classList.add('hidden');
+          document.getElementById('meetingTitle').textContent = 'No upcoming meetings';
+          document.getElementById('meetingTime').textContent = '';
+          countdownSection.classList.remove('hidden');
+          stopCountdown();
+          return;
+        }
+        
+        // Find the next meeting (first event with a start time)
+        nextMeeting = events[0];
+        
+        loadingSection.classList.add('hidden');
+        countdownSection.classList.remove('hidden');
+        
+        displayMeetingInfo();
+        startCountdown();
+        startAutoRefresh();
+        
+      } catch (error) {
+        console.error('Error fetching calendar events:', error);
+        loadingSection.classList.add('hidden');
+        
+        if (error.status === 401) {
+          showError('Authorization expired. Please sign in again.');
+          handleSignOut();
+        } else {
+          showError('Failed to fetch calendar events: ' + (error.result?.error?.message || error.message));
+        }
+      }
+    }
+    
+    // Display Meeting Information
+    function displayMeetingInfo() {
+      if (!nextMeeting) return;
+      
+      const title = nextMeeting.summary || 'Untitled Meeting';
+      const startTime = nextMeeting.start.dateTime || nextMeeting.start.date;
+      const endTime = nextMeeting.end.dateTime || nextMeeting.end.date;
+      
+      document.getElementById('meetingTitle').textContent = title;
+      
+      const startDate = new Date(startTime);
+      const endDate = new Date(endTime);
+      
+      const formatOptions = {
+        weekday: 'long',
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric',
+        hour: 'numeric',
+        minute: '2-digit'
+      };
+      
+      const timeString = startDate.toLocaleString(undefined, formatOptions);
+      document.getElementById('meetingTime').textContent = timeString;
+    }
+    
+    // Countdown Timer
+    function startCountdown() {
+      if (countdownInterval) {
+        clearInterval(countdownInterval);
+      }
+      
+      updateCountdown();
+      countdownInterval = setInterval(updateCountdown, 1000);
+    }
+    
+    function stopCountdown() {
+      if (countdownInterval) {
+        clearInterval(countdownInterval);
+        countdownInterval = null;
+      }
+      
+      // Reset display
+      document.getElementById('days').textContent = '0';
+      document.getElementById('hours').textContent = '0';
+      document.getElementById('minutes').textContent = '0';
+      document.getElementById('seconds').textContent = '0';
+    }
+    
+    function updateCountdown() {
+      if (!nextMeeting) return;
+      
+      const startTime = nextMeeting.start.dateTime || nextMeeting.start.date;
+      const meetingDate = new Date(startTime);
+      const now = new Date();
+      const diff = meetingDate - now;
+      
+      if (diff <= 0) {
+        // Meeting has started or passed
+        showInfo('Meeting is starting now or has already started!');
+        stopCountdown();
+        
+        // Fetch next meeting after a short delay
+        setTimeout(() => {
+          fetchNextMeeting();
+        }, 3000);
+        return;
+      }
+      
+      const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+      const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+      const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+      const seconds = Math.floor((diff % (1000 * 60)) / 1000);
+      
+      document.getElementById('days').textContent = days;
+      document.getElementById('hours').textContent = hours;
+      document.getElementById('minutes').textContent = minutes;
+      document.getElementById('seconds').textContent = seconds;
+    }
+    
+    // Auto Refresh
+    function startAutoRefresh() {
+      if (autoRefreshInterval) {
+        clearInterval(autoRefreshInterval);
+      }
+      
+      autoRefreshInterval = setInterval(() => {
+        document.getElementById('refreshIndicator').textContent = 'Checking for updates...';
+        fetchNextMeeting();
+        setTimeout(() => {
+          document.getElementById('refreshIndicator').textContent = 'Auto-refresh: checking for updates every 5 minutes';
+        }, 2000);
+      }, AUTO_REFRESH_INTERVAL);
+    }
+    
+    // Manual Refresh
+    function handleRefresh() {
+      refreshBtn.disabled = true;
+      refreshBtn.textContent = '🔄 Refreshing...';
+      
+      fetchNextMeeting().finally(() => {
+        refreshBtn.disabled = false;
+        refreshBtn.textContent = '🔄 Refresh Now';
+        showInfo('Calendar refreshed');
+      });
+    }
+    
+    // Event Listeners
+    connectBtn.addEventListener('click', handleAuthClick);
+    signOutBtn.addEventListener('click', handleSignOut);
+    refreshBtn.addEventListener('click', handleRefresh);
+    
+    // Initialize when APIs are loaded
+    window.gapiLoaded = gapiLoaded;
+    window.gisLoaded = gisLoaded;
+    
+    // Fallback: Check if scripts are already loaded
+    window.addEventListener('load', () => {
+      setTimeout(() => {
+        if (typeof gapi !== 'undefined' && !gapiInited) {
+          gapiLoaded();
+        }
+        if (typeof google !== 'undefined' && !gisInited) {
+          gisLoaded();
+        }
+      }, 1000);
+    });
+  </script>
+</body>
+</html>

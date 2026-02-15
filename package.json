@@ -1,0 +1,36 @@
+{
+  "name": "calendar-countdown",
+  "version": "2.0.0",
+  "description": "Real-time countdown to your next Google Calendar meeting with beautiful glassmorphism design",
+  "type": "module",
+  "main": "server.js",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "start": "node server.js",
+    "vercel-build": "vite build"
+  },
+  "keywords": [
+    "calendar",
+    "countdown",
+    "google-calendar",
+    "meeting",
+    "timer",
+    "glassmorphism"
+  ],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "express": "^4.18.2",
+    "dotenv": "^16.3.1",
+    "cors": "^2.8.5"
+  },
+  "devDependencies": {
+    "vite": "^5.0.10",
+    "terser": "^5.26.0"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}
