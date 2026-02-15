@@ -179,7 +179,7 @@ calendar-countdown/
 4. Create OAuth 2.0 credentials
 5. Add authorized origins:
    - `http://localhost:3000` (development)
-   - `https://your-app.vercel.app` (production)
+   - `https://calendar-countdown-steel.vercel.app` (production)
 6. Copy your Client ID
 
 ### 2. Environment Variables
