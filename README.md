@@ -10,7 +10,7 @@
 
 **Real-time countdown to your next Google Calendar meeting with beautiful glassmorphism design**
 
-[🚀 Live Demo](https://your-app.vercel.app) • [📚 Documentation](./DEPLOYMENT.md) • [🐛 Report Bug](../../issues)
+[🚀 Live Demo](https://calendar-countdown-steel.vercel.app) • [📚 Documentation](./DEPLOYMENT.md) • [🐛 Report Bug](../../issues)
 
 </div>
 
